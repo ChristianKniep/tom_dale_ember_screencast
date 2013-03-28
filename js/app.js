@@ -33,6 +33,7 @@ App.PostController = Ember.ObjectController.extend({
   },
   doneEditing: function (){
     this.set('isEditing', false);
+    this.get('store').commit();
   }
 });
 

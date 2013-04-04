@@ -1,5 +1,5 @@
-// Version: v1.0.0-rc.1-261-g8a4e6af
-// Last commit: 8a4e6af (2013-03-28 08:40:09 -0700)
+// Version: v1.0.0-rc.2
+// Last commit: 656fa6e (2013-03-29 13:40:38 -0700)
 
 
 (function() {
@@ -151,8 +151,8 @@ Ember.deprecateFunc = function(message, func) {
 
 })();
 
-// Version: v1.0.0-rc.1-261-g8a4e6af
-// Last commit: 8a4e6af (2013-03-28 08:40:09 -0700)
+// Version: v1.0.0-rc.2
+// Last commit: 656fa6e (2013-03-29 13:40:38 -0700)
 
 
 (function() {
@@ -212,7 +212,7 @@ var define, requireModule;
 
   @class Ember
   @static
-  @version 1.0.0-rc.1
+  @version 1.0.0-rc.2
 */
 
 if ('undefined' === typeof Ember) {
@@ -239,10 +239,10 @@ Ember.toString = function() { return "Ember"; };
 /**
   @property VERSION
   @type String
-  @default '1.0.0-rc.1'
+  @default '1.0.0-rc.2'
   @final
 */
-Ember.VERSION = '1.0.0-rc.1';
+Ember.VERSION = '1.0.0-rc.2';
 
 /**
   Standard environmental variables. You can define these in a global `ENV`
@@ -8553,7 +8553,7 @@ Ember.Array = Ember.Mixin.create(Ember.Enumerable, /** @scope Ember.Array.protot
     This returns the objects at the specified indexes, using `objectAt`.
 
     ```javascript
-    var arr = ['a', 'b', 'c', 'd'];
+    var arr = ['a', 'b', 'c', 'd'];
     arr.objectsAt([0, 1, 2]);  // ["a", "b", "c"]
     arr.objectsAt([2, 3, 4]);  // ["c", "d", undefined]
     ```
@@ -21659,7 +21659,8 @@ Ember.Select = Ember.View.extend(
 
   tagName: 'select',
   classNames: ['ember-select'],
-  defaultTemplate: Ember.Handlebars.template(function anonymous(Handlebars, depth0, helpers, partials, data) { this.compilerInfo = [2,'>= 1.0.0-rc.3'];
+  defaultTemplate: Ember.Handlebars.template(function anonymous(Handlebars,depth0,helpers,partials,data) {
+this.compilerInfo = [2,'>= 1.0.0-rc.3'];
 helpers = helpers || Ember.Handlebars.helpers; data = data || {};
   var buffer = '', stack1, hashTypes, escapeExpression=this.escapeExpression, self=this;
 
@@ -23223,7 +23224,8 @@ DSL.prototype = {
   },
 
   push: function(url, name, callback) {
-    if (url === "" || url === "/") { this.explicitIndex = true; }
+    var parts = name.split('.');
+    if (url === "" || url === "/" || parts[parts.length-1] === "index") { this.explicitIndex = true; }
 
     this.matches.push([url, name, callback]);
   },
@@ -24432,7 +24434,7 @@ Ember.onLoad('Ember.Handlebars', function(Handlebars) {
     container = options.data.keywords.controller.container;
     router = container.lookup('router:main');
 
-    Ember.assert("This view is already rendered", !router || !router._lookupActiveView(name));
+    Ember.assert("You can only use the {{render}} helper once without a model object as its second argument, as in {{render \"post\" post}}.", context || !router || !router._lookupActiveView(name));
 
     view = container.lookup('view:' + name) || container.lookup('view:default');
 
@@ -24460,7 +24462,7 @@ Ember.onLoad('Ember.Handlebars', function(Handlebars) {
     options.hash.template = container.lookup('template:' + name);
     options.hash.controller = controller;
 
-    if (router && !contextString) {
+    if (router && !context) {
       router._connectActiveView(name, view);
     }
 
@@ -25912,8 +25914,6 @@ var Application = Ember.Application = Ember.Namespace.extend(Ember.DeferredMixin
   */
   customEvents: null,
 
-  isInitialized: false,
-
   // Start off the number of deferrals at 1. This will be
   // decremented by the Application's own `initialize` method.
   _readinessDeferrals: 1,
@@ -26006,11 +26006,10 @@ var Application = Ember.Application = Ember.Namespace.extend(Ember.DeferredMixin
     var self = this;
 
     if (!this.$ || this.$.isReady) {
-      Ember.run.schedule('actions', self, 'initialize');
+      Ember.run.schedule('actions', self, '_initialize');
     } else {
       this.$().ready(function(){
-        if (self.isDestroyed) { return; }
-        Ember.run(self, 'initialize');
+        Ember.run(self, '_initialize');
       });
     }
   },
@@ -26105,6 +26104,20 @@ var Application = Ember.Application = Ember.Namespace.extend(Ember.DeferredMixin
 
   /**
     @private
+    @deprecated
+
+    Calling initialize manually is not supported.
+
+    Please see Ember.Application#advanceReadiness and
+    Ember.Application#deferReadiness.
+
+    @method initialize
+   **/
+  initialize: function(){
+    Ember.deprecate('Calling initialize manually is not supported. Please see Ember.Application#advanceReadiness and Ember.Application#deferReadiness');
+  },
+  /**
+    @private
 
     Initialize the application. This happens automatically.
 
@@ -26112,12 +26125,10 @@ var Application = Ember.Application = Ember.Namespace.extend(Ember.DeferredMixin
     choose to defer readiness. For example, an authentication hook might want
     to defer readiness until the auth token has been retrieved.
 
-    @method initialize
+    @method _initialize
   */
-  initialize: function() {
-    Ember.assert("Application initialize may only be called once. Note: calling initialize in application code is no longer required.", !this.isInitialized);
-    Ember.assert("Cannot initialize a destroyed application", !this.isDestroyed);
-    this.isInitialized = true;
+  _initialize: function() {
+    if (this.isDestroyed) { return; }
 
     // At this point, the App.Router must already be assigned
     this.register('router:main', this.Router);
@@ -26137,10 +26148,8 @@ var Application = Ember.Application = Ember.Namespace.extend(Ember.DeferredMixin
     get(this, '__container__').destroy();
     this.buildContainer();
 
-    this.isInitialized = false;
-
     Ember.run.schedule('actions', this, function(){
-      this.initialize();
+      this._initialize();
       this.startRouting();
     });
   },
@@ -27732,8 +27741,8 @@ Ember States
 
 
 })();
-// Version: v1.0.0-rc.1-261-g8a4e6af
-// Last commit: 8a4e6af (2013-03-28 08:40:09 -0700)
+// Version: v1.0.0-rc.2
+// Last commit: 656fa6e (2013-03-29 13:40:38 -0700)
 
 
 (function() {

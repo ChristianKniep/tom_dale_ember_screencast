@@ -8,32 +8,31 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-
+  
   <script type="text/x-handlebars">
     <div class="navbar">
       <div class="navbar-inner">
         <a class="brand" href="#">Bloggr</a>
         <ul class="nav">
-          <li>{{#linkTo 'posts'}}Posts{{/linkTo}}</li>
+          <li>{{#linkTo 'pins'}}Pins{{/linkTo}}</li>
           <li>{{#linkTo 'about'}}About{{/linkTo}}</li>
         </ul>
       </div>
     </div>
-
     {{outlet}}
   </script>
 
-  <script type="text/x-handlebars" id="posts">
+  <script type="text/x-handlebars" id="pins">
     <div class="container-fluid">
       <div class="row-fluid">
         <div class="span3">
           <table class="table">
             <thead>
-              <tr><th>Recent Posts</th></tr>
+              <tr><th>My Pins</th></tr>
             </thead>
             {{#each model}}
             <tr><td>
-              {{#linkTo 'post' this}}{{title}} <small class="muted">by {{author}}</small>{{/linkTo}}
+              {{#linkTo 'pin' this}}{{name}} <small class="muted">State {{status}}</small>{{/linkTo}}
             </td></tr>
             {{/each}}
           </table>
@@ -44,41 +43,30 @@
       </div>
     </div>
   </script>
+  
+  <script type="text/x-handlebars" id="pins/index">
+    <p class="text-warning">Please select a pin.</p>
+  </script>
+  
+  <script type='text/x-handlebars' id="pin">
+  {{#if isEditing}}
+    {{partial 'pin/edit'}}
+  <button {{action 'doneEditing'}}>Done</button>
+  {{else}}
+  <button {{action 'startEditing'}}>Edit</button>
+  {{/if}}
 
-  <script type="text/x-handlebars" id="posts/index">
-    <p class="text-warning">Please select a post.</p>
+  <h2>{{name}}</h2>
+  <h3>Status {{status}} <small class="muted">({{date changedAt}})</small></h3>
   </script>
 
-  <script type="text/x-handlebars" id="post">
-    {{#if isEditing}}
-      {{partial 'post/edit'}}
-      <button class="btn" {{action 'doneEditing'}}>Done</button>
-    {{else}}
-      <button class="btn" {{action 'edit'}}>Edit</button>
-    {{/if}}
-
-    <h1>{{title}}</h1>
-    <h2>by {{author}} <small class="muted">{{date publishedAt}}</small></h2>
-
-    <hr>
-
-    <div class="intro">
-      {{markdown intro}}
-    </div>
-    <div class="below-the-fold">
-      {{markdown extended}}
-    </div>
-  </script>
-
-  <script type="text/x-handlebars" id="post/_edit">
-    <p>{{view Ember.TextField valueBinding='title'}}</p>
-    <p>{{view Ember.TextArea valueBinding='intro'}}</p>
-    <p>{{view Ember.TextArea valueBinding='extended'}}</p>
+  <script type="text/x-handlebars" id="pin/_edit">
+    <p>{{view Ember.TextField valueBinding='name'}}</p>
   </script>
 
   <script type="text/x-handlebars" id="about">
     <div class="about">
-      This is about
+      <p>Dies ist eine Testseite um eine kleine Einfuehrung in EmberJS und Bootsstrap zu geben.</p>
     </div>
   </script>
 
